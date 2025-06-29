@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(45, 100%, 98%);
+  --foreground: hsl(240, 10%, 15%);
+  --muted: hsl(45, 50%, 95%);
+  --muted-foreground: hsl(240, 5%, 45%);
+  --popover: hsl(45, 100%, 98%);
+  --popover-foreground: hsl(240, 10%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 15%);
+  --border: hsl(45, 30%, 85%);
+  --input: hsl(45, 30%, 85%);
+  --primary: hsl(210, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(45, 80%, 85%);
+  --secondary-foreground: hsl(240, 10%, 15%);
+  --accent: hsl(350, 80%, 60%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(210, 100%, 50%);
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(240, 10%, 8%);
+  --foreground: hsl(45, 50%, 95%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 8%);
+  --popover-foreground: hsl(45, 50%, 95%);
+  --card: hsl(240, 10%, 12%);
+  --card-foreground: hsl(45, 50%, 95%);
+  --border: hsl(240, 3.7%, 20%);
+  --input: hsl(240, 3.7%, 20%);
+  --primary: hsl(210, 100%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(45, 30%, 25%);
+  --secondary-foreground: hsl(45, 50%, 95%);
+  --accent: hsl(350, 80%, 65%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(210, 100%, 60%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom Skibidi Hub animations */
+.skibidi-bounce {
+  animation: skibidi-bounce 2s infinite;
+}
+
+@keyframes skibidi-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.toilet-shake {
+  animation: toilet-shake 0.5s;
+}
+
+@keyframes toilet-shake {
+  10%, 90% {
+    transform: translateX(-1px);
+  }
+  20%, 80% {
+    transform: translateX(2px);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-4px);
+  }
+  40%, 60% {
+    transform: translateX(4px);
+  }
+}
+
+.sigma-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  transition: box-shadow 0.3s ease;
+}
+
+.sigma-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+}
