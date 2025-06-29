@@ -15,10 +15,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search posts - MUST come before individual post route
-  app.get("/api/posts/search/:query", async (req, res) => {
+  // Search posts using query parameter
+  app.get("/api/posts/search", async (req, res) => {
     try {
-      const query = req.params.query;
+      const query = req.query.q as string;
       if (!query || query.trim().length === 0) {
         return res.status(400).json({ message: "Search query is required" });
       }

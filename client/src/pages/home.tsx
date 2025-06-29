@@ -19,6 +19,13 @@ export default function Home() {
 
   const { data: searchResults, isLoading: isSearchLoading } = useQuery<Post[]>({
     queryKey: ["/api/posts/search", searchQuery],
+    queryFn: async () => {
+      const response = await fetch(`/api/posts/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+      return response.json();
+    },
     enabled: isSearching && searchQuery.length > 0,
   });
 
