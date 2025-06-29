@@ -1,0 +1,13 @@
+{
+  "builds": [
+    { "src": "vite.config.ts", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+  ],
+  "functions": {
+    "server/api/**/*.{ts,js}": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server/api/$1" }
+  ]
+}
