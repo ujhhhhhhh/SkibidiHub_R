@@ -5,26 +5,56 @@ import { insertPostSchema, insertCommentSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all posts
+  // Get all posts with pagination
   app.get("/api/posts", async (req, res) => {
     try {
-      const posts = await storage.getAllPosts();
-      res.json(posts);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const offset = (page - 1) * limit;
+      
+      const allPosts = await storage.getAllPosts();
+      const totalPosts = allPosts.length;
+      const posts = allPosts.slice(offset, offset + limit);
+      
+      res.json({
+        posts,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalPosts / limit),
+          totalPosts,
+          hasMore: offset + limit < totalPosts
+        }
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch posts" });
     }
   });
 
-  // Search posts using query parameter
+  // Search posts using query parameter with pagination
   app.get("/api/posts/search", async (req, res) => {
     try {
       const query = req.query.q as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
+      const offset = (page - 1) * limit;
+      
       if (!query || query.trim().length === 0) {
         return res.status(400).json({ message: "Search query is required" });
       }
       
-      const posts = await storage.searchPosts(query);
-      res.json(posts);
+      const allPosts = await storage.searchPosts(query);
+      const totalPosts = allPosts.length;
+      const posts = allPosts.slice(offset, offset + limit);
+      
+      res.json({
+        posts,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalPosts / limit),
+          totalPosts,
+          hasMore: offset + limit < totalPosts
+        }
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to search posts" });
     }
@@ -82,16 +112,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get comments for a post
+  // Get comments for a post with pagination
   app.get("/api/posts/:id/comments", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = (page - 1) * limit;
+      
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid post ID" });
       }
       
-      const comments = await storage.getCommentsByPostId(id);
-      res.json(comments);
+      const allComments = await storage.getCommentsByPostId(id);
+      const totalComments = allComments.length;
+      const comments = allComments.slice(offset, offset + limit);
+      
+      res.json({
+        comments,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(totalComments / limit),
+          totalComments,
+          hasMore: offset + limit < totalComments
+        }
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch comments" });
     }

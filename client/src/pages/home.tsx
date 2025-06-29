@@ -1,31 +1,67 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, TrendingUp } from "lucide-react";
+import { Plus, Search, TrendingUp, Loader2 } from "lucide-react";
 import PostCard from "@/components/post-card";
 import SearchBar from "@/components/search-bar";
 import type { Post } from "@shared/schema";
+
+interface PostsResponse {
+  posts: Post[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalPosts: number;
+    hasMore: boolean;
+  };
+}
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const {
+    data: postsData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery<PostsResponse>({
     queryKey: ["/api/posts"],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await fetch(`/api/posts?page=${pageParam}&limit=5`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts');
+      }
+      return response.json();
+    },
+    getNextPageParam: (lastPage) => 
+      lastPage.pagination.hasMore ? lastPage.pagination.currentPage + 1 : undefined,
+    initialPageParam: 1,
   });
 
-  const { data: searchResults, isLoading: isSearchLoading } = useQuery<Post[]>({
+  const {
+    data: searchData,
+    isLoading: isSearchLoading,
+    fetchNextPage: fetchNextSearchPage,
+    hasNextPage: hasNextSearchPage,
+    isFetchingNextPage: isFetchingNextSearchPage
+  } = useInfiniteQuery<PostsResponse>({
     queryKey: ["/api/posts/search", searchQuery],
-    queryFn: async () => {
-      const response = await fetch(`/api/posts/search?q=${encodeURIComponent(searchQuery)}`);
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await fetch(`/api/posts/search?q=${encodeURIComponent(searchQuery)}&page=${pageParam}&limit=5`);
       if (!response.ok) {
         throw new Error('Search failed');
       }
       return response.json();
     },
+    getNextPageParam: (lastPage) => 
+      lastPage.pagination.hasMore ? lastPage.pagination.currentPage + 1 : undefined,
+    initialPageParam: 1,
     enabled: isSearching && searchQuery.length > 0,
   });
 
@@ -34,8 +70,22 @@ export default function Home() {
     setIsSearching(query.length > 0);
   };
 
-  const displayPosts = isSearching ? searchResults : posts;
+  const displayData = isSearching ? searchData : postsData;
   const displayLoading = isSearching ? isSearchLoading : isLoading;
+  const displayPosts = displayData?.pages.flatMap(page => page.posts) || [];
+  const totalPosts = displayData?.pages[0]?.pagination.totalPosts || 0;
+  const totalLikes = displayPosts.reduce((sum, post) => sum + post.likes, 0);
+
+  const handleLoadMore = () => {
+    if (isSearching) {
+      fetchNextSearchPage();
+    } else {
+      fetchNextPage();
+    }
+  };
+
+  const hasMore = isSearching ? hasNextSearchPage : hasNextPage;
+  const isFetchingMore = isSearching ? isFetchingNextSearchPage : isFetchingNextPage;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -69,13 +119,11 @@ export default function Home() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">{posts?.length || 0}</div>
+              <div className="text-2xl font-bold text-blue-600">{totalPosts}</div>
               <div className="text-sm text-muted-foreground">Total Posts</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-red-600">
-                {posts?.reduce((sum, post) => sum + post.likes, 0) || 0}
-              </div>
+              <div className="text-2xl font-bold text-red-600">{totalLikes}</div>
               <div className="text-sm text-muted-foreground">Total Likes</div>
             </div>
             <div>
@@ -121,9 +169,32 @@ export default function Home() {
             </Card>
           ))
         ) : displayPosts && displayPosts.length > 0 ? (
-          displayPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))
+          <>
+            {displayPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center py-4">
+                <Button 
+                  onClick={handleLoadMore}
+                  disabled={isFetchingMore}
+                  variant="outline"
+                  size="lg"
+                >
+                  {isFetchingMore ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More Posts"
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <Card className="text-center py-12">
             <CardContent>
